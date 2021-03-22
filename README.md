@@ -1,2 +1,2 @@
 # ae4878_assignments
-AE4-878 Mission Geometry and Orbit Design
+AE4-878 Mission Geometry and Orbit Design assignments
