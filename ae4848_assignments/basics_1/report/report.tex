@@ -1,0 +1,385 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Formal Book Title Page
+% LaTeX Template
+% Version 2.0 (23/7/17)
+%
+% This template was downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Peter Wilson (herries.press@earthlink.net) with modifications by:
+% Vel (vel@latextemplates.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+% 
+% This template can be used in one of two ways:
+%
+% 1) Content can be added at the end of this file just before the \end{document}
+% to use this title page as the starting point for your document.
+%
+% 2) Alternatively, if you already have a document which you wish to add this
+% title page to, copy everything between the \begin{document} and
+% \end{document} and paste it where you would like the title page in your
+% document. You will then need to insert the packages and document 
+% configurations into your document carefully making sure you are not loading
+% the same package twice and that there are no clashes.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[11pt]{article} % A4 paper size, default 11pt font size and oneside for equal margins
+
+\usepackage[a4paper, margin=1in]{geometry}
+
+\usepackage[utf8]{inputenc} % Required for inputting international characters
+\usepackage[T1]{fontenc} % Output font encoding for international characters
+\usepackage{fouriernc} % Use the New Century Schoolbook font
+
+\usepackage[]{todonotes}
+\usepackage{verbatim}
+\usepackage{parskip}
+\usepackage[acronym]{glossaries}
+\usepackage{eucal}
+\usepackage{bm}
+\usepackage{rotating}
+%\usepackage{hyperref}
+\usepackage[toc,page]{appendix}
+
+\usepackage{physics}
+% \usepackage{amsmath}
+\usepackage{tikz}
+\usepackage{mathdots}
+% \usepackage{yhmath}
+\usepackage{cancel}
+\usepackage{color}
+\usepackage{siunitx}
+\usepackage{array}
+\usepackage{multirow}
+% \usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{wrapfig}
+\usetikzlibrary{fadings}
+\usetikzlibrary{patterns}
+\usetikzlibrary{shadows.blur}
+\usetikzlibrary{shapes}
+
+\usepackage[backend=bibtex]{biblatex}
+\addbibresource{report.bib}
+
+
+\newcommand{\e}[2]{#1\cdot 10^{#2}}
+\newcommand{\nd}[1]{\mathbf{#1}}
+% 
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\begin{document} 
+    \begin{titlepage} % Suppresses headers and footers on the title page
+
+        \centering % Centre everything on the title page
+        
+        \scshape % Use small caps for all text on the title page
+        
+        \vspace*{\baselineskip} % White space at the top of the page
+        
+        %------------------------------------------------
+        %	Title
+        %------------------------------------------------
+        
+        \rule{\textwidth}{1.6pt}\vspace*{-\baselineskip}\vspace*{2pt} % Thick horizontal rule
+        \rule{\textwidth}{0.4pt} % Thin horizontal rule
+        
+        \vspace{0.75\baselineskip} % Whitespace above the title
+        
+        {\LARGE BASICS 1: COORDINATE TRANSFORMATIONS} % Title
+        
+        \vspace{0.75\baselineskip} % Whitespace below the title
+        
+        \rule{\textwidth}{0.4pt}\vspace*{-\baselineskip}\vspace{3.2pt} % Thin horizontal rule
+        \rule{\textwidth}{1.6pt} % Thick horizontal rule
+        
+        \vspace{2\baselineskip} % Whitespace after the title block
+        
+        %------------------------------------------------
+        %	Subtitle
+        %------------------------------------------------
+        
+        AE4-878 Mission Geometry and Orbit Design
+        % Subtitle or further description
+        
+        \vspace*{3\baselineskip} % Whitespace under the subtitle
+        
+        %------------------------------------------------
+        %	Editor(s)
+        %------------------------------------------------
+        
+        \vspace{0.5\baselineskip} % Whitespace before the editors
+        
+        {\scshape\Large Aaron de Windt --- 4134249} % Editor list
+        
+        \vspace{0.5\baselineskip} % Whitespace below the editor list
+        
+        \textit{Delft University of Technology \\ Delft} % Editor affiliation
+        
+        \vfill % Whitespace between editor names and publisher logo
+        
+        %------------------------------------------------
+        %	Publisher
+        %------------------------------------------------
+        
+        % \plogo % Publisher logo
+        
+        \vspace{0.3\baselineskip} % Whitespace under the publisher logo
+        
+        2021 % Publication year
+        
+        % {\large publisher} % Publisher
+
+    \end{titlepage}
+
+%----------------------------------------------------------------------------------------
+
+    % \tableofcontents
+    
+    \newpage
+    
+    \section{Assignment}
+    1. Convert the following state-vector from Cartesian components to Kepler elements:
+    \begin{align*}
+        x&=8751268.4691\ [m] \\
+        y&=-7041314.6869\ [m] \\
+        z&=4846546.9938\ [m] \\
+        \dot{x}&=332.2601039\ [m s^{-1}] \\
+        \dot{y}&=-2977.0815768\ [m s^{-1}] \\
+        \dot{z}&=-4869.8462227\ [m s^{-1}] \\
+    \end{align*}
+    
+    2. Convert the following state-vector from Kepler elements to Cartesian components:
+    \begin{align*}
+        a&=12158817.9615\ [m] \\
+        e&=0.014074320051\ [m] \\
+        i&=52.666016957\ [deg] \\
+        \Omega&=323.089150643\ [deg] \\
+        \omega&=148.382589129\ [deg] \\
+        M&=112.192638384\ [deg] \\
+    \end{align*}
+
+    \section{Mathematical description}
+    The goal of this assignment is to develop the necessary functions to convert between Cartesian components and Kepler elements. This section explains the mathematics used in the implementation of these functions. These where all found in \emph{Mission geometry: orbit and constellation design and management} by \emph{J. R. Wertz}~\cite{wertz2001mission}.
+
+    \subsection{Cartesian components to Kepler elements}
+    First step is to calculate the orbit angular momentum, $\nd{h}$, and the vector to the ascending node, $\nd{N}$. 
+
+    \begin{align}
+        \nd{h} &= \nd{r} \cross \nd{V} \\
+        \nd{N} &= \frac{\nd{\hat{z}} \cross \nd{\hat{h}} }{\left| \nd{h} \right|}
+    \end{align}
+
+    Here are $\nd{r}$ and $\nd{V}$ the position and velocity vectors and $\hat{z}$ is a unit vector normal to the equatorial plane.
+
+    The eccentricity vector can be calculated using,
+
+    \begin{equation}
+        \nd{e} = \frac{\nd{V} \cross \nd{h}}{\mu} - \frac{\nd{r}}{\left| \nd{r} \right|}
+    \end{equation}
+
+    The semi-major axis can be found using the total energy.
+
+    \begin{align}
+        E &= \frac{\left| \nd{V} \right|^2}{2} - \frac{\mu}{\left| \nd{r} \right|} \\
+        a &= - \frac{\mu}{2E}
+    \end{align}
+
+    The eccentricity, $e$, inclination $i$, right ascension of the ascending node, $\Omega$, argument of periapsis, $\omega$, and true anomaly $\theta$ can then be calculated using,
+
+    \begin{align}
+        e &= \left| \nd{e} \right| \\
+        \cos{i} &= \frac{h_z}{\left| \nd{h} \right|} \\
+        \tan{\Omega} &= \frac{N_y}{N_x} \\
+        \cos{\omega} &= \frac{\nd{e} \cdot \nd{\hat{N}}}{e} \label{eq:omega} \\
+        \cos{\theta} &= \frac{\nd{r} \cdot \nd{e}}{e\left| \nd{r} \right|}
+    \end{align}
+
+    The argument of periapsis will be between 0° and 180° when $\left(\nd{\hat{N}} \cross \nd{e}\right) \cdot \nd{h} > 0$ and between 180° and 360° when this value is negative. However the expression above will only give values between 0° and 180°. The correct value for the argument of periapsis may be calculated by subtracting the result of Equation~\ref{eq:omega} from 360° when $\left(\nd{\hat{N}} \cross \nd{e}\right) \cdot \nd{h} < 0$.
+
+    A similar issue is also present for the true anomaly, it will be between 0° and 180° when $\left(\nd{e} \cross \nd{r}\right) \cdot \nd{h} > 0$, otherwise it will be between 180° and 360°. The solution is the same as with the argument of periapsis.
+
+    Finally the eccentric anomaly, $E$, and mean anomaly $M$ are calculated as using, 
+
+    \begin{align}
+        \tan{E} &= \frac{\sqrt{1 - e^2} \sin{\theta}}{e + \cos{\theta}} \\
+        M &= E - e \sin{E}
+    \end{align}
+
+    \subsection{Kepler elements to Cartesian components}
+    Beginning in the \emph{perifocal coordinate system} in which the orbit plane is the x/y plane with the x axis in the direction of periapsis. The semiparameter, $p$, is the distance from the center of mass to the orbit, measured perpendicular to the mayor axis. It's given by the following equation in terms of the semi-mayor axis, $a$, and eccentricity, $e$.
+
+    \begin{equation}
+        p = a \left(1 - e^2\right)
+    \end{equation}
+
+    The position in the perifocal frame is given by,
+
+    \begin{equation}
+        \nd{r_{pf}}=\begin{bmatrix}
+            p \frac{\cos{\theta}}{1 + e \cos{\theta}} \\
+            p \frac{\sin{\theta}}{1 + e \cos{\theta}} \\
+        \end{bmatrix}
+    \end{equation}
+
+    and the velocity,
+    \begin{equation}
+        \nd{V_{pf}}=\begin{bmatrix}
+            -\sqrt{\frac{\mu}{p}} \sin{\theta} \\
+            \sqrt{\frac{\mu}{p}} \left(e + \cos{\theta}\right)
+        \end{bmatrix}
+    \end{equation}
+
+    The transformation matrix, $C_{pf}$, from the perifocal to inertial frame is as follows,
+
+    \begin{equation}
+        C_{pf} = \left[\begin{matrix}- \sin{\left(\Omega \right)} \sin{\left(\omega \right)} \cos{\left(i \right)} + \cos{\left(\Omega \right)} \cos{\left(\omega \right)} & - \sin{\left(\Omega \right)} \cos{\left(\omega \right)} \cos{\left(i \right)} - \sin{\left(\omega \right)} \cos{\left(\Omega \right)} & \sin{\left(\Omega \right)} \sin{\left(i \right)}\\\sin{\left(\Omega \right)} \cos{\left(\omega \right)} + \sin{\left(\omega \right)} \cos{\left(\Omega \right)} \cos{\left(i \right)} & - \sin{\left(\Omega \right)} \sin{\left(\omega \right)} + \cos{\left(\Omega \right)} \cos{\left(\omega \right)} \cos{\left(i \right)} & - \sin{\left(i \right)} \cos{\left(\Omega \right)}\\\sin{\left(\omega \right)} \sin{\left(i \right)} & \sin{\left(i \right)} \cos{\left(\omega \right)} & \cos{\left(i \right)}\end{matrix}\right]
+    \end{equation}
+
+    The inertial position and velocity can then be calculate using,
+
+    \begin{align}
+        \nd{r} &= C_{pf} \cdot \nd{r_{pf}} \\
+        \nd{V} &= C_{pf} \cdot \nd{V_{pf}}
+    \end{align}
+
+    The true anomaly is needed for these equations, but it may not necessarily be known. It is possible to calculate the true anomaly from the eccentric anomaly using,
+
+    \begin{equation}
+        \tan{\frac{\theta}{2}} = \left(\frac{1+e}{1-e}\right)^{\frac{1}{2}}
+                                 \tan{\frac{E}{2}}
+    \end{equation}
+
+    Unfortunately there is no analytical solution for calculating the eccentric or true anomaly from the mean anomaly, thus it necessary to solve it numerically. For this assignment it is done by solving the following equation for the eccentric anomaly, $E$, using a numerical root finding method. The specific numerical method used is left to be selected by the scientific software library (scipy) based on the inputs given to it.
+
+    \begin{equation}
+        0 = E - e \sin{E} - M
+    \end{equation}
+
+    
+    \section{Testing}
+    Unittests where written for testing the functions. The first few unittests use the examples given in the lecture slides. The functions are called with the example input values and the results are checked to be close within a certain tolerance to the expected values. Tables~\ref{tab:cctkeut}~and~\ref{tab:ketccut} show the results of these tests.
+    
+    The rest of the unittests convert from Kepler elements to Cartesian components and back to Kepler elements which are then checked against the original Kepler elements. These cases are manually selected in order include edge cases and cases not covered by the examples from the lecture slides. Examples of some of these cases are zero and negative inclination, highly eccentric but still elliptical orbits, argument of periapsis and true anomalies between 180° and 360° and combinations of some of these conditions. Due to the large number of automated tests it is inconvenient to add the results directly in this report, however at the time of writing all tests where passing.
+    
+    \begin{table}[h!] \centering
+        \begin{tabular}{l||rrr|rrr}
+                                & Example 1     &               &              & Example 2     \\
+            \hline \hline
+                                &        Result &      Expected &     Error\%  &        Result &      Expected &     Error\% \\
+            \hline 
+            $a\ [m]$            &   6.78775e+06 &   6.78775e+06 & 1.08393e-11  &   7.09614e+06 &   7.09614e+06 & 2.0703e-07  \\
+            $e\ [-]$            &   0.000731104 &   0.000731104 & 1.76321e-05  &   0.0011219   &   0.0011219   & 8.8506e-05  \\
+            $i\ [\degree]$      &  51.6871      &  51.6871      & 8.31844e-10  &  92.0316      &  92.0316      & 3.2867e-08  \\
+            $\Omega\ [\degree]$ & 127.549       & 127.549       & 1.95492e-08  & 296.138       & 296.138       & 6.5539e-09  \\
+            $\omega\ [\degree]$ &  74.2199      &  74.2199      & 2.49098e-09  & 120.688       & 120.688       & 3.85834e-05 \\
+            $\theta\ [\degree]$ &  24.1003      &  24.1003      & 2.67354e-09  & 239.544       & 239.544       & 3.26752e-05 \\
+            $E\ [\degree]$      &  24.0832      &  24.0832      & 1.24563e-09  & 239.599       & 239.599       & 4.36334e-05 \\
+            $M\ [\degree]$      &  24.0661      &  24.0661      & 5.29195e-09  & 239.655       & 239.655       & 1.94195e-05 \\
+            \hline
+        \end{tabular}
+        \caption{Unittest results for the Cartesian components to Kepler Elements function using the examples from the lecture slides.}
+        \label{tab:cctkeut}
+    \end{table}
+
+    \begin{table}[h!] \centering
+        \begin{tabular}{l||rrr|rrr}
+                                   & Example 1       &                 &              & Example 2     \\
+            \hline \hline
+                                   &          Result &        Expected &      Error\% &          Result &        Expected &      Error\% \\
+            \hline
+            $x\ [m]$               &    -2.70082e+06 &    -2.70082e+06 & -2.0929e-08  &     3.12697e+06 &     3.12697e+06 &  1.45115e-07 \\
+            $y\ [m]$               &    -3.31409e+06 &    -3.31409e+06 & -3.07529e-08 &    -6.37445e+06 &    -6.37445e+06 & -6.19502e-08 \\
+            $z\ [m]$               &     5.26635e+06 &     5.26635e+06 &  1.28802e-08 & 28673.6         & 28673.6         &  8.48746e-06 \\
+            $\dot{x}\ [m\ s^{-1}]$ &  5168.61        &  5168.61        &  3.1752e-08  &  -254.912       &  -254.912       & -1.44902e-06 \\
+            $\dot{y}\ [m\ s^{-1}]$ & -5597.55        & -5597.55        & -4.78342e-08 &   -83.3011      &   -83.3011      & -1.51447e-06 \\
+            $\dot{z}\ [m\ s^{-1}]$ &  -868.878       &  -868.878       & -5.5328e-08  &  7485.71        &  7485.71        &  2.72705e-08 \\
+            \hline
+            \end{tabular}
+            \caption{Unittest results for the Kepler Elements to Cartesian components function using the examples from the lecture slides.}
+        \label{tab:ketccut}
+    \end{table}
+    % \begin{table}[h!] \centering
+    %     \begin{tabular}{lrrr}
+    %         \hline
+    %                                &          Result &        Expected &      Error\% \\
+    %         \hline
+    %         $x\ [m]$               &     3.12697e+06 &     3.12697e+06 &  1.45115e-07 \\
+    %         $y\ [m]$               &    -6.37445e+06 &    -6.37445e+06 & -6.19502e-08 \\
+    %         $z\ [m]$               & 28673.6         & 28673.6         &  8.48746e-06 \\
+    %         $\dot{x}\ [m\ s^{-1}]$ &  -254.912       &  -254.912       & -1.44902e-06 \\
+    %         $\dot{y}\ [m\ s^{-1}]$ &   -83.3011      &   -83.3011      & -1.51447e-06 \\
+    %         $\dot{z}\ [m\ s^{-1}]$ &  7485.71        &  7485.71        &  2.72705e-08 \\
+    %         \hline
+    %     \end{tabular}
+    % \end{table}
+
+    \newpage
+    \section{Assignment results}
+    All calculations where done using $\mu=3.98600441e14\ [m^3 s^{-2}]$.
+
+    \subsection{Cartesian components to Kepler elements}
+    These are the results from the first part of the assignment. As a sanity check these results where passed to the Kepler elements to Cartesian components function which yielded results within $1e-07$ relative tolerance to the original inputs. Thus it likely that these results are correct.
+    
+    \begin{align*}
+        a&=12273086.181\ [m] \\
+        e&=0.0050221667\ [m] \\
+        i&=109.81877383\ [deg] \\
+        \Omega&=132.23369779\ [deg] \\
+        \omega&=105.06673299\ [deg] \\
+        \theta&=50.027991349\ [deg] \\
+        E&=49.807826568\ [deg] \\
+        M&=49.588019690\ [deg] \\
+    \end{align*}
+
+    \subsection{Kepler elements to Cartesian components}
+    These are the results from the second part of the assignment. As a sanity check these results where passed to the Cartesian components to Kepler elements function which yielded results within $1e-07$ relative tolerance to the original inputs. Thus it likely that these results are correct.
+    
+    \begin{align*}
+        x&=-5760654.2301\ [m] \\
+        y&=-4856967.4882\ [m] \\
+        z&=-9627444.8622\ [m] \\
+        \dot{x}&=4187.6612513\ [m s^{-1}] \\
+        \dot{y}&=-3797.5451854\ [m s^{-1}] \\
+        \dot{z}&=-683.61512604\ [m s^{-1}] \\
+    \end{align*}
+
+    \newpage
+
+    \begin{appendices}
+        \section{Software}
+        The requirements for executing the assignment code are:
+        \begin{itemize}
+            \item Python 3.8 or higher
+            \item JupyterLab
+            \item Numpy
+            \item Scipy
+            \item tabulate
+        \end{itemize}
+
+        Please read the README file for a description of the repository file structure.
+        
+        \subsection{Docker}
+        This is optional, but to ensure a consistent development environment a docker container is used to host the python interpreter and JupyterLab server used to develop and run the code. To start the container first ensure that both docker and docker-compose are installed on the host machine. Starting the JupyterLab instance can be done by running the following command in a terminal from the repository root directory (the directory containing the \emph{docker-compose.yml} file).
+
+        \texttt{docker-compose up}
+
+        Instructions on how to open JupyterLab will appear in the terminal after the container has successfully started. This JupyterLab instance will have all requirements preinstalled and the assignment code should run without issues.        
+
+    \end{appendices}
+
+
+    \printbibliography
+\end{document}

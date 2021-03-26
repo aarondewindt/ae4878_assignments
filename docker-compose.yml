@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  ae4848_assignments:
+  ae4878_assignments:
     build:
       context: .
       dockerfile: .Dockerfile
@@ -15,4 +15,4 @@ services:
       - JUPYTER_ENABLE_LAB=1
       - RESTARTABLE=1
     volumes:
-      - ./:/home/jovyan/ae4848_assignments
+      - ./:/home/jovyan/ae4878_assignments

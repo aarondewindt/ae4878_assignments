@@ -1,7 +1,7 @@
 FROM jupyter/scipy-notebook
 
 ## Define environment variables
-ENV PROJECT_NAME=ae4848_assignments
+ENV PROJECT_NAME=ae4878_assignments
 ENV PROJECT_DIR=$HOME/$PROJECT_NAME
 
 # Switch to the root user

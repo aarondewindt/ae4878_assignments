@@ -1,14 +1,21 @@
-from math import acos, atan2, cos, sin, sqrt, pi, tan, atan
+from math import acos, atan2, cos, sin, sqrt, pi, tan, atan, fmod
 from typing import Sequence, Optional
 
 import numpy as np
 from numpy.linalg import norm
 from scipy.optimize import root_scalar
 
-from constants import z_hat, mu_earth
+from constants import z_hat, mu_earth, eps64
 
 
-def cartesian_to_kepler(r: Sequence[float], v: Sequence[float], mu: float=mu_earth):
+def limit_zero_2pi(angle):
+    """
+    Limit an angle such that it's between 0 and 2pi
+    """
+    return fmod(angle + 2 * np.pi, 2 * np.pi)
+
+
+def cartesian_to_kepler(r: Sequence[float], v: Sequence[float], mu: float = mu_earth):
     """
     Convert Cartesian components to Kepler elements.
 
@@ -31,51 +38,74 @@ def cartesian_to_kepler(r: Sequence[float], v: Sequence[float], mu: float=mu_ear
 
     # Orbit angular momentum
     h = np.cross(r, v)
+    h_hat = h / norm(h)
 
     # Ascending node
-    n = np.cross(z_hat, h / norm(h))
-    n_hat = n / norm(n)
+    n = np.cross(z_hat, h_hat)
+    n_norm = norm(n)
+    # In case of zero inclination there is no acending node and this
+    # cross product will return a zero vector.
+    # This is because this particular orientation results in a gibal lock
+    # between the RAAN and argument of periapsis.
+    # For this case we will define both these angles as zero.
+    if n_norm > eps64:
+        n_hat = n / n_norm
+    else:
+        n_hat = None
 
-    # Eccentricity vector
+    # Eccentricity vector and eccentricity
     e_vec = np.cross(v, h) / mu - r / r_norm
+    e = norm(e_vec)
 
     # Semi major axis
     a = 1 / (2 / r_norm - norm(v)**2/mu)
-
-    # Eccentricity
-    e = norm(e_vec)
 
     # Inclination
     i = acos(h[2] / norm(h))
 
     # Right Ascension of the Ascending Node
-    raan = atan2(n[1], n[0])
-    raan = (raan + 2 * np.pi) % (2 * np.pi)  # Force range between 0 and 2pi.
+    if n_hat is not None:
+        raan = atan2(n[1], n[0])
+        raan = limit_zero_2pi(raan)
+    else:
+        raan = 0
 
-    # Argument of perigee
-    omega = acos(e_vec @ n_hat / norm(e_vec))
+    # Argument of periapsis
+    # There is no periapsis if the orbit is circular, so set it to zero.
+    if n_hat is not None:
+        e_hat = (e_vec / norm(e_vec))
+        omega = acos(e_hat @ n_hat)
+        if (np.cross(n_hat, e_vec) @ h) < 0:
+            # omega is between pi and 2pi
+            omega = 2 * pi - omega
+        omega = limit_zero_2pi(omega)
+    else:
+        omega = 0
 
-    # True anomaly
-    sign = 1 if np.cross(e_vec, r) @ h > 0 else -1
-    theta = sign * acos(r @ e_vec / (e * r_norm))
-    theta = (theta + 2 * np.pi) % (2 * np.pi)  # Force range between 0 and 2pi.
+    # Anomalies
+    true_anomaly = acos(r @ e_vec / (e * r_norm))
+    if np.cross(e_vec, r) @ h < 0:
+        # true_anomaly is between pi and 2pi
+        true_anomaly = 2 * pi - true_anomaly
+    true_anomaly = limit_zero_2pi(true_anomaly)
 
-    # Eccentric anomaly
-    e_ano = atan2(sqrt(1 - e**2) * sin(theta), e + cos(theta))
-    e_ano = (e_ano + 2 * np.pi) % (2 * np.pi)  # Force range between 0 and 2pi.
+    eccentric_anomaly = atan2(sqrt(1 - e**2) * sin(true_anomaly), e + cos(true_anomaly))
+    eccentric_anomaly = limit_zero_2pi(eccentric_anomaly)
 
-    # Mean anomaly
-    m = e_ano - e * sin(e_ano)
-    m = (m + 2 * np.pi) % (2 * np.pi)  # Force range between 0 and 2pi.
+    mean_anomaly = eccentric_anomaly - e * sin(eccentric_anomaly)
+    mean_anomaly = limit_zero_2pi(mean_anomaly)
 
-    return a, e, i, raan, omega, theta, e_ano, m
+    return a, e, i, raan, omega, true_anomaly, eccentric_anomaly, mean_anomaly
 
 
 def kepler_to_cartesian(a: float, e: float, i: float, raan: float, omega: float,
-                        theta: Optional[float]=None, e_ano: Optional[float]=None, m: Optional[float]=None, 
-                        mu: float=mu_earth):
+                        true_anomaly: Optional[float] = None,
+                        eccentric_anomaly: Optional[float] = None,
+                        mean_anomaly: Optional[float] = None,
+                        mu: float = mu_earth):
     """
-    Convert to Kepler elements to Cartesian components.
+    Convert to Kepler elements to Cartesian components. At least one of the anomalies is required,
+    the rest can be set to `None`.
 
     Source:
         Wertz, James Richard. "Mission geometry; orbit and constellation
@@ -86,43 +116,43 @@ def kepler_to_cartesian(a: float, e: float, i: float, raan: float, omega: float,
     :param i: Inclination.
     :param raan: Right ascension of the ascending node (Omega).
     :param omega: Argument of periapsis.
-    :param theta: True anomaly.
-    :param e_ano: Eccentric anomaly.
-    :param m: Mean anomaly.
+    :param true_anomaly: True anomaly.
+    :param eccentric_anomaly: Eccentric anomaly.
+    :param mean_anomaly: Mean anomaly.
     :param mu: Optional, Standard gravitational parameter, by defaults it's Earth's (3.98600441e14).
-    :return: Tuple with the cartesian position (r) and velocity (v).
+    :return: Tuple with the cartesian position (r) and velocity (V).
     """
 
     # We need the true anomaly for the calculations, check if it was given.
-    if theta is None:
+    if true_anomaly is None:
         # If not we can calculate it from the eccentric anomaly, check if it was given.
-        if e_ano is None:
+        if eccentric_anomaly is None:
             # If not we can calculate the eccentric anomaly from the mean anomaly.
             # Check if it was given.
-            if m is None:
+            if mean_anomaly is None:
                 # We need at least one of the three anomalies. Raise error.
                 raise ValueError('At least one of "True anomaly", "Eccentric anomaly" or "Mean anomaly" '
                                  'is required')
             else:
-                e_ano = eccentric_anomaly_from_mean_anomaly(e, m)
+                eccentric_anomaly = eccentric_anomaly_from_mean_anomaly(e, mean_anomaly)
 
         # We should have a value for the eccentric anomaly at this point.
-        theta = true_anomaly_from_eccentric_anomaly(e, e_ano)
+        true_anomaly = true_anomaly_from_eccentric_anomaly(e, eccentric_anomaly)
 
     # Semiparameter
     p = a * (1 - e**2)
 
     # Position in the perifocal coordinate system (pf)
     r_pf = np.zeros(3)
-    r_pf[0] = p * cos(theta) / (1 + e * cos(theta))
-    r_pf[1] = p * sin(theta) / (1 + e * cos(theta))
+    r_pf[0] = p * cos(true_anomaly) / (1 + e * cos(true_anomaly))
+    r_pf[1] = p * sin(true_anomaly) / (1 + e * cos(true_anomaly))
 
     # Velocity in the perifocal coordinate system
     v_pf = np.zeros(3)
-    v_pf[0] = -sqrt(mu / p) * sin(theta)
-    v_pf[1] = sqrt(mu / p) * (e + cos(theta))
+    v_pf[0] = -sqrt(mu / p) * sin(true_anomaly)
+    v_pf[1] = sqrt(mu / p) * (e + cos(true_anomaly))
 
-    # Tranformation matrix from the perifocal to inertial coordinate system.
+    # Transformation matrix from the perifocal to inertial coordinate system.
     cr = cos(raan)
     co = cos(omega)
     ci = cos(i)
@@ -135,39 +165,42 @@ def kepler_to_cartesian(a: float, e: float, i: float, raan: float, omega: float,
                      [so*si, co*si, ci]])
 
     # Position and velocity in the inertial frame
-    r = c_pf @ r_pf
-    v = c_pf @ v_pf
+    position = c_pf @ r_pf
+    velocity = c_pf @ v_pf
 
-    return r, v
+    return position, velocity
 
 
-def eccentric_anomaly_from_mean_anomaly(e: float, m: float):
+def eccentric_anomaly_from_mean_anomaly(e: float, mean_anomaly: float):
     """
     Calculates the eccentric anomaly from the mean anomaly using a
-    numerical rootfinding method.
-    
+    numerical root-finding method.
+
     :param e: Eccentricity.
-    :param m: Mean anomaly.
+    :param mean_anomaly: Mean anomaly.
     :return: Mean anomaly
     """
     # Equation to solve. This is the equation to calculate the mean
     # anomaly from the eccentric anomaly minus the mean anomaly.
-    # Thus the solusion will be at the root.
+    # So the solution will be at the root.
     def f(e_ano):
-        return e_ano - e * sin(e_ano) - m
-    
+        return e_ano - e * sin(e_ano) - mean_anomaly
+
     # Solve it numerically, we're letting scipy choose a method for us here.
-    solution = root_scalar(f, x0=m, bracket=[0, 2*pi])
+    solution = root_scalar(f, x0=mean_anomaly, bracket=[0, 2 * pi])
     return solution.root
 
 
-def true_anomaly_from_eccentric_anomaly(e: float, e_ano):
+def true_anomaly_from_eccentric_anomaly(e: float, eccentric_anomaly):
     """
     Calculates the true anomaly from the eccentric anomaly
     
     :param e: Eccentricity.
-    :param m: Eccentric anomaly.
+    :param eccentric_anomaly: Eccentric anomaly.
     :return: True anomaly
     """
-    return 2 * atan(sqrt((1+e)/(1-e)) * tan(e_ano/2))
-    
+    numerator = sqrt(1+e) * sin(eccentric_anomaly/2)
+    denominator = sqrt(1-e) * cos(eccentric_anomaly/2)
+    return 2 * atan2(numerator, denominator)
+
+#     return 2 * atan(sqrt((1+e)/(1-e)) * tan(eccentric_anomaly / 2))

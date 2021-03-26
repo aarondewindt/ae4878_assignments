@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from distutils.util import convert_path
 
 
-ver_path = convert_path('ae4848_assignments/version.py')
+ver_path = convert_path('ae4878_assignments/version.py')
 with open(ver_path) as ver_file:
     ns = {}
     exec(ver_file.read(), ns)
@@ -12,7 +12,7 @@ with open('requirements.txt') as f:
     required = f.read().splitlines()
 
 setup(
-    name='ae4848_assignments',
+    name='ae4878_assignments',
     version=ns['version'],
     description="AE4-878 Mission Geometry and Orbit Design assignments.",
     author='Aaron de Windt',

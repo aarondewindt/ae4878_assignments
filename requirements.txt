@@ -6,3 +6,4 @@ xarray
 sympy
 pandas
 numba
+tabulate
