@@ -194,7 +194,7 @@ def eccentric_anomaly_from_mean_anomaly(e: float, mean_anomaly: float):
 def true_anomaly_from_eccentric_anomaly(e: float, eccentric_anomaly):
     """
     Calculates the true anomaly from the eccentric anomaly
-    
+
     :param e: Eccentricity.
     :param eccentric_anomaly: Eccentric anomaly.
     :return: True anomaly

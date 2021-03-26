@@ -12,7 +12,8 @@ class TestTransformations(unittest.TestCase):
         self.print_results = False
         self.print_results_cartesian_to_kepler = False
         self.print_results_kepler_to_cartesian__mean_anomaly = False
-        
+
+        # Lecture slide examples.
         self.example_data = [
             {
                 "cartesian": ([-2700816.14, -3314092.80, 5266346.42], [5168.606550, -5597.546618, -868.878445]),
@@ -35,7 +36,7 @@ class TestTransformations(unittest.TestCase):
             kepler = cartesian_to_kepler(*example_data['cartesian'])
             results.append(kepler)
             npt.assert_allclose(kepler, example_data['kepler'], rtol=1e-6)
-            
+
         if self.print_results and self.print_results_cartesian_to_kepler:
             first_col = np.array([[r"$a\ [m]$", r"$e\ [-]$", r"$i\ [\degree]$", r"$\Omega\ [\degree]$", 
                                    r"$\omega\ [\degree]$", r"$\theta\ [\degree]$", r"$E\ [\degree]$", 
@@ -51,7 +52,6 @@ class TestTransformations(unittest.TestCase):
                 print(r"\begin{table}[h!] \centering")
                 print(tabulate(table, headers, tablefmt="latex_raw"))
                 print(r"\end{table}")
-            
 
     def test_kepler_to_cartesian__true_anomaly(self):
         """
@@ -81,12 +81,12 @@ class TestTransformations(unittest.TestCase):
             cartesian = kepler_to_cartesian(*(example_data['kepler'][:5]), mean_anomaly=example_data['kepler'][7])
             results.append(cartesian)
             npt.assert_allclose(cartesian, example_data['cartesian'], rtol=1e-3)
-            
+
         if self.print_results and self.print_results_kepler_to_cartesian__mean_anomaly:
             first_col = np.array([[
                 r"$x\ [m]$", r"$y\ [m]$", r"$z\ [m]$", r"$\dot{x}\ [m\ s^{-1}]$",
                 r"$\dot{y}\ [m\ s^{-1}]$", r"$\dot{z}\ [m\ s^{-1}]$"]]).T
-            
+
             headers = ["", "Result", "Expected", "Error\%"]
             for result, expected in zip(results, self.example_data):
                 result = np.array(result).reshape((6, 1))
